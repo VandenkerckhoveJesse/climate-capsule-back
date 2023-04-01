@@ -115,7 +115,6 @@ function getCoordinatesFromCity(city) {
                         lat: lat,
                         lng: lng
                     };
-                    //console.log(JSON.stringify(location));
                     resolve(JSON.stringify(location));
                 } catch (e) {
                     console.log("did not find the coordinates with API");
@@ -137,7 +136,7 @@ function degreesToRadians(degrees) {
 function calculateDistanceBetween(l1, l2) {
     const earthRadiusKm = 6371;
     const dLat = degreesToRadians(l2.lat - l1.lat);
-    const dLon = degreesToRadians(l2.long - l1.lng);
+    const dLon = degreesToRadians(l2.lng - l1.lng);
 
     const lat1 = degreesToRadians(l1.lat);
     const lat2 = degreesToRadians(l2.lat);
@@ -155,16 +154,15 @@ function calculateDistanceBetween(l1, l2) {
  */
 function isInRadius(radius, cityCoordonates, stories) {
     const jsonCityCoordonates = JSON.parse(cityCoordonates); //objet à comparer
-    for (let i = 0; i < stories.length; i++) {
-
-        const currentObject = stories[i];
-        let allStoriesInRadius = [];
+    const jsonStories = JSON.parse(stories);
+    let allStoriesInRadius = [];
+    for (let i = 0; i < jsonStories.length; i++) {
+        const currentObject = jsonStories[i];
         if(calculateDistanceBetween(jsonCityCoordonates, currentObject.location) <= radius) {
-            allStoriesInRadius.push(stories[i]);
+            allStoriesInRadius.push(jsonStories[i]);
         }
-        console.log(allStoriesInRadius);
-        return allStoriesInRadius;
     }
+    return allStoriesInRadius;
 }
 
 //ROUTES----------
@@ -174,9 +172,8 @@ router.get('/', async function(req, res, next) {
     if(city != null && city.length > 0 && radius != null && radius.length > 0) {
         //case that we have a get request
         const cityCoordinates= await getCoordinatesFromCity(city);
-        const stories = JSON.parse(await getStories());
-        isInRadius(radius, cityCoordinates, stories);
-        res.send("did it");
+        const stories = await getStories();
+        res.send(isInRadius(radius, cityCoordinates, stories));
     } else {
         //nothing
         res.setHeader("Content-Type", "application/json");
@@ -192,7 +189,6 @@ router.post('/', async function(req, res, next) {
 
     else {
         const stories = JSON.parse(await getStories());
-        console.log(stories);
         stories.push(story);
         fs2.writeFileSync(filePath, JSON.stringify(stories));
         res.send('received a valid json object');
