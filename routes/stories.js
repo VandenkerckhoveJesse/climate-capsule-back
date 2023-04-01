@@ -173,9 +173,17 @@ router.get('/', async function(req, res, next) {
     const radius = req.query.radius;
     if(city != null && city.length > 0 && radius != null && radius.length > 0) {
         //case that we have a get request
-        const cityCoordinates= await getCoordinatesFromCity(city);
-        const stories = await getStories();
-        res.send(isInRadius(radius, cityCoordinates, stories));
+        try {
+            var cityCoordinates= await getCoordinatesFromCity(city);
+            var stories = await getStories();
+
+            res.send(isInRadius(radius, cityCoordinates, stories));
+        }
+        catch (err) {
+            res.status(400)
+            res.send("Something went wrong")
+        }
+    
     } else {
         //nothing
         res.setHeader("Content-Type", "application/json");
