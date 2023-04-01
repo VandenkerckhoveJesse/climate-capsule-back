@@ -42,6 +42,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
   update_on_linode:
     name: Linode server restarts Docker container with new image
+    needs: "push_to_registry"
     runs-on: ubuntu-latest
     steps:
     - name: executing remote ssh commands using password
