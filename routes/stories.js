@@ -36,7 +36,7 @@ function getStories() {
  */
 function isValidJsonStory(story) {
     if (typeof story === 'object' && story !== null && !Array.isArray(story)) {
-        if (!story.location || !story.location.lat || !story.location.long) {
+        if (!story.location || !story.location.lat || !story.location.lng) {
             console.log("location");
             return false;
         }
