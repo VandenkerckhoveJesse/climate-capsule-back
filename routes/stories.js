@@ -162,7 +162,9 @@ function isInRadius(radius, cityCoordonates, stories) {
             allStoriesInRadius.push(jsonStories[i]);
         }
     }
-    return allStoriesInRadius;
+    const location = {lat: jsonCityCoordonates.lat, lng: jsonCityCoordonates.lng};
+    const obj = {location: location, stories: allStoriesInRadius};
+    return obj;
 }
 
 //ROUTES----------
