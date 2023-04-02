@@ -198,4 +198,9 @@ router.post('/', async function(req, res, next) {
     res.send("story successfully added");
 });
 
-module.exports = router;
+module.exports = {
+    isInRadius,
+    getCoordonatesFromCity,
+    router
+};
+
