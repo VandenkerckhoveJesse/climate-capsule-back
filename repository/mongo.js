@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const {connect} = require("mongoose");
 
+const connectionString = "mongodb+srv://climate:climate@jvdkdevcluster.v3hfq2n.mongodb.net/climate-capsule"
+
 /**
  * Create a schema to match with an object of the MongoDB databse
  * */
@@ -27,7 +29,7 @@ const Story = mongoose.model('Story', storySchema);
  * @returns {Promise<void>}
  */
 async function connectDB() {
-    await mongoose.connect("mongodb://127.0.0.1:27017/climate-capsule", {
+    await mongoose.connect(connectionString, {
         useNewUrlParser: true,
         useUnifiedTopology: true
     }).then(() => {
