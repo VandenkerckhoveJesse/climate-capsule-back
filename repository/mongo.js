@@ -27,7 +27,7 @@ const Story = mongoose.model('Story', storySchema);
  * @returns {Promise<void>}
  */
 async function connectDB() {
-    await mongoose.connect("mongodb://mongoservice:27017/climate-capsule", {
+    await mongoose.connect("mongodb://127.0.0.1:27017/climate-capsule", {
         useNewUrlParser: true,
         useUnifiedTopology: true
     }).then(() => {
