@@ -27,20 +27,22 @@ router.get('/new', async function(req, res, next) {
 
             var points = stories.map(story => [story.location.lng, story.location.lat])
 
-            //console.log(points)
-            ghRouting.doRequest({points:points})
-                .then(function(json) {
-                    let coordinates = json.paths[0].points.coordinates
-                    let parsedCoordinates = coordinates.map(coordinate => {return {lat: coordinate[1], lng : coordinate[0]}})
-                    res.send({location : finalLocation, stories: stories, path: {coordinates: parsedCoordinates}})
-                })
-                .catch(function(err) {
-                    console.error(err.message)
-                })
+            if(stories.length<2) {
+                res.send({location : finalLocation, stories: stories, path: {coordinates: []}})
+            } else {
+                ghRouting.doRequest({points:points})
+                    .then(function(json) {
+                        let coordinates = json.paths[0].points.coordinates
+                        let parsedCoordinates = coordinates.map(coordinate => {return {lat: coordinate[1], lng : coordinate[0]}})
+                        res.send({location : finalLocation, stories: stories, path: {coordinates: parsedCoordinates}})
+                    })
+                    .catch(function(err) {
+                        console.error(err.message)
+                    })
+            }
         }
         catch (err) {
-            console.log("mon gars ca s'est mal passé");
-            res.send("errNFJDSB");
+            res.send("Adventure path does not work");
         }
     }
 
