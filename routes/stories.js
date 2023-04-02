@@ -140,23 +140,23 @@ function calculateDistanceBetween(l1, l2) {
 }
 
 /**
- * for a radius, compare each story with the coordonates of a city given
+ * for a radius, compare each story with the coordinates of a city given
  * @param {number} radius
- * @param {{lat, lng}} cityCoordonates
+ * @param {{lat, lng}} cityCoordinates
+ * @param stories
  */
-function isInRadius(radius, cityCoordonates, stories) {
-    const jsonCityCoordonates = JSON.parse(cityCoordonates); //objet à comparer
+function isInRadius(radius, cityCoordinates, stories) {
+    const jsonCityCoordinates = JSON.parse(cityCoordinates); //objet à comparer
     const jsonStories = stories;
     let allStoriesInRadius = [];
     for (let i = 0; i < jsonStories.length; i++) {
         const currentObject = jsonStories[i];
-        if(calculateDistanceBetween(jsonCityCoordonates, currentObject.location) <= radius) {
+        if(calculateDistanceBetween(jsonCityCoordinates, currentObject.location) <= radius) {
             allStoriesInRadius.push(jsonStories[i]);
         }
     }
-    const location = {lat: jsonCityCoordonates.lat, lng: jsonCityCoordonates.lng};
-    const obj = {location: location, stories: allStoriesInRadius};
-    return obj;
+    const location = {lat: jsonCityCoordinates.lat, lng: jsonCityCoordinates.lng};
+    return {location: location, stories: allStoriesInRadius};
 }
 
 //ROUTES---------
