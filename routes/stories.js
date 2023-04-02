@@ -1,12 +1,8 @@
 var express = require('express');
 var router = express.Router();
-const path = require('path');
-const fs = require('fs/promises');
-const fs2 = require('fs');
 const bodyParser = require('body-parser');
 router.use(bodyParser.json());
-const filePath = path.join(__dirname, '..', 'data', 'stories.json');
-const { getAll, addStory } = require('../data/mongo.js');
+const { getAll, addStory } = require('../repository/mongo.js');
 
 
 /* GET users listing. */
@@ -199,7 +195,7 @@ router.post('/', async function(req, res, next) {
     //check if the json we received is valid
     if(!isValidJsonStory(story)) res.status(400).send('received an invalid json object');
     await addStory(story);
-    res.send("test");
+    res.send("story successfully added");
 });
 
 module.exports = router;
