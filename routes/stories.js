@@ -1,40 +1,20 @@
 var express = require('express');
 var router = express.Router();
-const path = require('path');
-const fs = require('fs/promises');
-const fs2 = require('fs');
 const bodyParser = require('body-parser');
 router.use(bodyParser.json());
-const filePath = path.join(__dirname, '..', 'data', 'stories.json');
+const { getAll, addStory } = require('../repository/mongo.js');
+
+
 /* GET users listing. */
 
 const http = require('http');
 const querystring = require('querystring');
 const {json} = require("express");
 
-/**
- * Returns an array of JSON objects.
- * @returns {string} An array of JSON objects.
- */
-function getStories() {
-    return fs.readFile(filePath, 'utf8', (err, data) => {
-        if (err) {
-            console.error(err);
-            return;
-        }
-        const stories = JSON.parse(data);
-        const listOfStories = [];
-        stories.forEach(story => {
-            listOfStories.push(story);
-        });
-        console.log(listOfStories);
-        return JSON.stringify(listOfStories);
-    });
-}
 
 /**
  * Validate if the object is a valid json story
- * @param {Object}story
+ * @param {Object} story
  * @returns {boolean}
  */
 function isValidJsonStory(story) {
@@ -92,10 +72,11 @@ function isValidJsonStory(story) {
 
 
 /**
+ * Get the coordonates of a city from an API (opencagedata)
  * @param city string
  * @returns {{lat, lng}}
  */
-function getCoordinatesFromCity(city) {
+function getCoordonatesFromCity(city) {
     const apiKey = 'ba96c5fccf934a96b624f1b41879bbbd';
     const endpoint = `http://api.opencagedata.com/geocode/v1/json?q=${querystring.escape(city)}&key=${apiKey}`;
     return new Promise((resolve, reject) => {
@@ -129,10 +110,21 @@ function getCoordinatesFromCity(city) {
 
 }
 
+/**
+ * Concert a value from degrees to radians
+ * @param degrees
+ * @returns {number}
+ */
 function degreesToRadians(degrees) {
     return degrees * Math.PI / 180;
 }
 
+/**
+ * Calculate the distance between 2 locations (lat and lng)
+ * @param l1 the first location
+ * @param l2 the second location
+ * @returns {number} the distance in kilometers
+ */
 function calculateDistanceBetween(l1, l2) {
     const earthRadiusKm = 6371;
     const dLat = degreesToRadians(l2.lat - l1.lat);
@@ -148,63 +140,67 @@ function calculateDistanceBetween(l1, l2) {
 }
 
 /**
- * pour chaque coordonnée, je dois comparer avec cityCoordonates et voir si la distance < radius
+ * for a radius, compare each story with the coordinates of a city given
  * @param {number} radius
- * @param {{lat, lng}} cityCoordonates
+ * @param {{lat, lng}} cityCoordinates
+ * @param stories
  */
-function isInRadius(radius, cityCoordonates, stories) {
-    const jsonCityCoordonates = JSON.parse(cityCoordonates); //objet à comparer
-    const jsonStories = JSON.parse(stories);
+function isInRadius(radius, cityCoordinates, stories) {
+    const jsonCityCoordinates = JSON.parse(cityCoordinates); //objet à comparer
+    const jsonStories = stories;
     let allStoriesInRadius = [];
     for (let i = 0; i < jsonStories.length; i++) {
         const currentObject = jsonStories[i];
-        if(calculateDistanceBetween(jsonCityCoordonates, currentObject.location) <= radius) {
+        if(calculateDistanceBetween(jsonCityCoordinates, currentObject.location) <= radius) {
             allStoriesInRadius.push(jsonStories[i]);
         }
     }
-    const location = {lat: jsonCityCoordonates.lat, lng: jsonCityCoordonates.lng};
-    const obj = {location: location, stories: allStoriesInRadius};
-    return obj;
+    const location = {lat: jsonCityCoordinates.lat, lng: jsonCityCoordinates.lng};
+    return {location: location, stories: allStoriesInRadius};
 }
 
-//ROUTES----------
+//ROUTES---------
+
+/**
+ * Route to get all the story (json array) ond if we precise a city and a radius, return only stories are in this radius
+ */
 router.get('/', async function(req, res, next) {
     const city = req.query.city;
     const radius = req.query.radius;
     if(city != null && city.length > 0 && radius != null && radius.length > 0) {
-        //case that we have a get request
+        //case that we want only stories in a radius
         try {
-            var cityCoordinates= await getCoordinatesFromCity(city);
-            var stories = await getStories();
-
+            const cityCoordinates= await getCoordonatesFromCity(city);
+            const stories = await getAll();
             res.send(isInRadius(radius, cityCoordinates, stories));
         }
         catch (err) {
             res.status(400)
             res.send("Something went wrong")
         }
-    
+        //case that we want all the stories
     } else {
-        //nothing
         res.setHeader("Content-Type", "application/json");
-        res.send(await getStories());
+        res.send(await getAll());
     }
 });
 
+
+/**
+ * Route to add a new story via the post method
+ */
 router.post('/', async function(req, res, next) {
 
     const story = req.body;
     //check if the json we received is valid
     if(!isValidJsonStory(story)) res.status(400).send('received an invalid json object');
-
-    else {
-        const stories = JSON.parse(await getStories());
-        stories.push(story);
-        fs2.writeFileSync(filePath, JSON.stringify(stories));
-        res.send('received a valid json object');
-    }
-
-
+    await addStory(story);
+    res.send("story successfully added");
 });
 
-module.exports = router;
+module.exports = {
+    isInRadius,
+    getCoordonatesFromCity,
+    router
+};
+

@@ -7,7 +7,8 @@ var cors = require('cors');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
-var storiesRouter = require('./routes/stories');
+var {router:storiesRouter} = require('./routes/stories');
+
 var adventuresRouter = require('./routes/adventures')
 
 
